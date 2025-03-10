@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetrian System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 20px 0;
+        }
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: cyan;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .fractal-display {
+            height: 400px;
+            background: linear-gradient(to bottom, #111, #222);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .converter, .ai-interaction {
+            margin-top: 30px;
+            padding: 20px;
+            background: #222;
+            border-radius: 8px;
+        }
+        .chat-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+        .chat-box {
+            height: 200px;
+            overflow-y: auto;
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .chat-input {
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        .send-btn {
+            padding: 10px;
+            background: cyan;
+            border: none;
+            color: #000;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Welcome to the Tetrian System</div>
+        <div class="nav">
+            <a href="#about">About Tetrian</a>
+            <a href="#convert">Conversion Tool</a>
+            <a href="#ai">AI Interaction</a>
+        </div>
+        <div class="fractal-display">
+            <canvas id="fractalCanvas"></canvas>
+        </div>
+        <div id="convert" class="converter">
+            <h2>Conversion Tool</h2>
+            <p>Convert between Tetrian, Metric, and Imperial Units</p>
+        </div>
+        <div id="ai" class="ai-interaction">
+            <h2>AI Interaction</h2>
+            <div class="chat-container">
+                <div class="chat-box" id="chatBox"></div>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask Tetrian AI...">
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 3D Fractal Visualization
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 400, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('fractalCanvas') });
+        renderer.setSize(window.innerWidth, 400);
+        document.querySelector('.fractal-display').appendChild(renderer.domElement);
+
+        const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+        camera.position.z = 3;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            sphere.rotation.x += 0.01;
+            sphere.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // AI Chat System
+        const socket = io("http://localhost:4000");
+
+        function sendMessage() {
+            const input = document.getElementById("chatInput").value;
+            if (!input) return;
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML += `<p><strong>You:</strong> ${input}</p>`;
+            document.getElementById("chatInput").value = "";
+            socket.emit("userMessage", input);
+        }
+
+        socket.on("aiResponse", (data) => {
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML += `<p><strong>Tetrian AI:</strong> ${data.response}</p>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
